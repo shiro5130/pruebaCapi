@@ -7,26 +7,40 @@ use App\Models\Phone;
 use App\Models\Email;
 use App\Models\Address;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ContactService
 {
     public function getAllContacts()
     {
-        
-        return Contact::with(['phones', 'emails', 'addresses'])
-            ->paginate(50); 
+
+        $query = Contact::with(['phones', 'emails', 'addresses']);
+
+        // Filtros
+        if (isset(request()->name)) {
+            $query->where(DB::raw("CONCAT(first_name, ' ', last_name)"), 'like', '%' . request()->name . '%');
+        }
+
+        // Ordenar por apellido, por defecto ascendente
+        if (isset($filters['order_by'])) {
+            $query->orderBy($filters['order_by'], $filters['direction'] ?? 'asc');
+        }
+
+        // Paginación
+        Log::debug($query->toSql());
+        return $query->paginate(50);
     }
 
     public function createContact(array $data)
     {
         return DB::transaction(function () use ($data) {
-  
+
             $contact = Contact::create([
                 'first_name' => $data['first_name'],
                 'last_name' => $data['last_name'],
             ]);
 
-  
+
             if (isset($data['phones'])) {
                 foreach ($data['phones'] as $phoneNumber) {
                     Phone::create([
@@ -96,7 +110,7 @@ class ContactService
     }
     private function syncAddresses(Contact $contact, array $addresses)
     {
-        $contact->addresses()->delete(); 
+        $contact->addresses()->delete();
         foreach ($addresses as $address) {
             $contact->addresses()->create([
                 'street' => $address['street'],
