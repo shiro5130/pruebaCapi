@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Services\ContactService;
 use App\Http\Requests\StoreContactRequest;
+use App\Http\Requests\UpdateContactRequest;
 use Illuminate\Http\Request;
 
 class ContactController extends Controller
@@ -34,6 +35,20 @@ class ContactController extends Controller
      
         return response()->json([
             'contacts' => $contacts
+        ], 200);
+    }
+    public function update(UpdateContactRequest $request, $id)
+    {
+        // Obtener los datos validados
+        $validatedData = $request->validated();
+
+        // Llamar al servicio para actualizar el contacto
+        $contact = $this->contactService->updateContact($id, $validatedData);
+
+        // Retornar la respuesta
+        return response()->json([
+            'message' => 'Contact updated successfully',
+            'contact' => $contact
         ], 200);
     }
 }
