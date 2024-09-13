@@ -106,4 +106,14 @@ class ContactService
             ]);
         }
     }
+
+    public function deleteContact($id)
+    {
+
+        $contact = Contact::findOrFail($id);
+        $contact->phones()->delete();
+        $contact->emails()->delete();
+        $contact->addresses()->delete();
+        $contact->delete();
+    }
 }
